@@ -253,7 +253,7 @@ const Controller = ((model, view) => {
           });
         } else
           model
-            .addToCart(itemToAdd)
+            .addToCart(itemInInventory)
             .then((data) => (state.cart = [data, ...state.cart]));
       }
     });
