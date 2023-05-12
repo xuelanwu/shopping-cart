@@ -113,12 +113,14 @@ const View = (() => {
   // implement your logic for View
   const inventoryListEl = document.querySelector(".inventory-list");
   const cartListEl = document.querySelector(".cart-list");
+  const checkoutBtn = document.querySelector(".checkout-btn");
+  const cartWrapperEl = document.querySelector(".cart-wrapper");
 
   const renderInventory = (inventory) => {
     let inventoryTemplate = "";
     inventory.forEach((item) => {
       const itemTemplate = `
-      <li class="inventory-item" id=${item.id}>
+      <li class="inventory-item" id="inventory-${item.id}">
       <p class="inventory-item-content">${item.content}</p>
       <button class="minus-btn">-</button>
       <p class="inventory-item-quantity">${item.quantity}</p>
@@ -126,12 +128,13 @@ const View = (() => {
       <button class="add-to-cart-btn">add to cart</button>
       </li>`;
       inventoryTemplate += itemTemplate;
-      inventoryListEl.innerHTML = inventoryTemplate;
     });
+    inventoryListEl.innerHTML = inventoryTemplate;
   };
 
-  const renderQuantityChange = (action) => {
-    const inventoryQuantityEl = document.querySelector(
+  const renderQuantityChange = (id, action) => {
+    const inventoryItemEl = document.querySelector(`#${id}`);
+    const inventoryQuantityEl = inventoryItemEl.querySelector(
       ".inventory-item-quantity"
     );
     if (action === "minus") {
@@ -140,8 +143,8 @@ const View = (() => {
     if (action === "plus") inventoryQuantityEl.innerText++;
   };
 
-  const getItemInfo = () => {
-    const inventoryItemEl = document.querySelector(".inventory-item");
+  const getItemInfo = (id) => {
+    const inventoryItemEl = document.querySelector(`#${id}`);
     const itemContentEl = inventoryItemEl.querySelector(
       ".inventory-item-content"
     );
@@ -157,22 +160,25 @@ const View = (() => {
   };
 
   const renderCart = (cart) => {
-    let CartTemplate = "";
+    let cartTemplate = "";
     cart.forEach((item) => {
       const itemTemplate = `
-      <li class="cart-item">
-      <p class="cart-item-content">${item.content}</p>
-      <p>x</p>
-      <p class="cart-item-quantity">${item.quantity}</p>
-      <button class="delete-btn">delete</button>
-      </li>`;
-      CartTemplate += itemTemplate;
-      cartListEl.innerHTML = CartTemplate;
+        <li class="cart-item" id="cart-${item.id}">
+        <p class="cart-item-content">${item.content}</p>
+        <p>x</p>
+        <p class="cart-item-quantity">${item.quantity}</p>
+        <button class="delete-btn">delete</button>
+        </li>`;
+      cartTemplate += itemTemplate;
     });
+    cartListEl.innerHTML = cartTemplate;
   };
 
   return {
     inventoryListEl,
+    cartListEl,
+    checkoutBtn,
+    cartWrapperEl,
     renderInventory,
     renderCart,
     renderQuantityChange,
@@ -194,11 +200,13 @@ const Controller = ((model, view) => {
   const handleUpdateAmount = () => {
     view.inventoryListEl.addEventListener("click", (e) => {
       const btn = e.target;
-      console.log(btn);
-      if (btn.className === "minus-btn") view.renderQuantityChange("minus");
-      if (btn.className === "plus-btn") view.renderQuantityChange("plus");
+      const li = btn.closest(".inventory-item");
+      if (btn.className === "minus-btn")
+        view.renderQuantityChange(li.id, "minus");
+      if (btn.className === "plus-btn")
+        view.renderQuantityChange(li.id, "plus");
       if (btn.className === "add-to-cart-btn") {
-        const itemToAdd = view.getItemInfo();
+        const itemToAdd = view.getItemInfo(li.id);
         const itemInCart = state.cart.find(
           (ele) => ele.content === itemToAdd.content
         );
@@ -220,19 +228,39 @@ const Controller = ((model, view) => {
     });
   };
 
-  const handleAddToCart = () => {
-    // view.inventoryItemEl?.addEventListener("click", (e) => {
-    //   console.log(e);
-    // });
+  // const handleAddToCart = () => {
+
+  // };
+
+  const handleDelete = () => {
+    view.cartListEl.addEventListener("click", (e) => {
+      const btn = e.target;
+      const li = btn.closest(".cart-item");
+      const itemId = li.id.split("-")[1];
+      model
+        .deleteFromCart(itemId)
+        .then(
+          (data) =>
+            (state.cart = state.cart.filter((ele) => ele.id !== +itemId))
+        );
+    });
   };
 
-  const handleDelete = () => {};
-
-  const handleCheckout = () => {};
+  const handleCheckout = () => {
+    view.cartWrapperEl.addEventListener("click", (e) => {
+      const btn = e.target;
+      if (btn.className === "checkout-btn") {
+        model.checkout().then((data) => {
+          state.cart = [];
+        });
+      }
+    });
+  };
   const bootstrap = () => {
     init();
     handleUpdateAmount(),
-      handleAddToCart(),
+      handleDelete(),
+      handleCheckout(),
       state.subscribe(() => {
         view.renderInventory(state.inventory);
         view.renderCart(state.cart);
