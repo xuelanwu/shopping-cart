@@ -1,24 +1,45 @@
+const { start } = require("live-server");
+
 const API = (() => {
   const URL = "http://localhost:3000";
-  const getCart = () => {
+  const getCart = async () => {
     // define your method to get cart data
-    return fetch(`${URL}/cart`).then((res) => res.json());
+    const res = await fetch(`${URL}/cart`);
+    return res.json();
   };
 
-  const getInventory = () => {
+  const getInventory = async () => {
     // define your method to get inventory data
+    const res = await fetch(`${URL}/inventory`);
+    return res.json();
   };
 
-  const addToCart = (inventoryItem) => {
+  const addToCart = async (inventoryItem) => {
     // define your method to add an item to cart
+    const res = await fetch(`${URL}/cart`, {
+      method: "POST",
+      body: JSON.stringify(inventoryItem),
+      headers: { "Content-Type": "application/json" },
+    });
+    return res.json();
   };
 
-  const updateCart = (id, newAmount) => {
+  const updateCart = async (id, updatedItem) => {
     // define your method to update an item in cart
+    const res = await fetch(`${URL}/cart/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(updatedItem),
+      headers: { "Content-Type": "application/json" },
+    });
+    return res.json();
   };
 
-  const deleteFromCart = (id) => {
+  const deleteFromCart = async (id) => {
     // define your method to delete an item in cart
+    const res = await fetch(`${URL}/cart/${id}`, {
+      method: "DELETE",
+    });
+    return res.json();
   };
 
   const checkout = () => {
@@ -90,22 +111,132 @@ const Model = (() => {
 
 const View = (() => {
   // implement your logic for View
-  return {};
+  const inventoryListEl = document.querySelector(".inventory-list");
+  const cartListEl = document.querySelector(".cart-list");
+
+  const renderInventory = (inventory) => {
+    let inventoryTemplate = "";
+    inventory.forEach((item) => {
+      const itemTemplate = `
+      <li class="inventory-item" id=${item.id}>
+      <p class="inventory-item-content">${item.content}</p>
+      <button class="minus-btn">-</button>
+      <p class="inventory-item-quantity">${item.quantity}</p>
+      <button class="plus-btn">+</button>
+      <button class="add-to-cart-btn">add to cart</button>
+      </li>`;
+      inventoryTemplate += itemTemplate;
+      inventoryListEl.innerHTML = inventoryTemplate;
+    });
+  };
+
+  const renderQuantityChange = (action) => {
+    const inventoryQuantityEl = document.querySelector(
+      ".inventory-item-quantity"
+    );
+    if (action === "minus") {
+      if (inventoryQuantityEl.innerText > 0) inventoryQuantityEl.innerText--;
+    }
+    if (action === "plus") inventoryQuantityEl.innerText++;
+  };
+
+  const getItemInfo = () => {
+    const inventoryItemEl = document.querySelector(".inventory-item");
+    const itemContentEl = inventoryItemEl.querySelector(
+      ".inventory-item-content"
+    );
+    const itemQuantityEl = inventoryItemEl.querySelector(
+      ".inventory-item-quantity"
+    );
+    const itemToAdd = {
+      content: itemContentEl.innerText,
+      quantity: itemQuantityEl.innerText,
+      // id: inventoryItemEl.id,
+    };
+    return itemToAdd;
+  };
+
+  const renderCart = (cart) => {
+    let CartTemplate = "";
+    cart.forEach((item) => {
+      const itemTemplate = `
+      <li class="cart-item">
+      <p class="cart-item-content">${item.content}</p>
+      <p>x</p>
+      <p class="cart-item-quantity">${item.quantity}</p>
+      <button class="delete-btn">delete</button>
+      </li>`;
+      CartTemplateTemplate += itemTemplate;
+      cartListEl.innerHTML = CartTemplate;
+    });
+  };
+
+  return {
+    inventoryListEl,
+    renderInventory,
+    renderCart,
+    renderQuantityChange,
+    getItemInfo,
+  };
 })();
 
 const Controller = ((model, view) => {
   // implement your logic for Controller
   const state = new model.State();
 
-  const init = () => {};
-  const handleUpdateAmount = () => {};
+  const init = () => {
+    model.getCart().then((res) => (state.cart = res.reverse()));
+    model.getInventory().then((res) => {
+      res.forEach((item) => (item.quantity = 0));
+      state.inventory = res;
+    });
+  };
+  const handleUpdateAmount = () => {
+    view.inventoryListEl.addEventListener("click", (e) => {
+      const btn = e.target;
+      if (btn.className === "minus-btn") view.renderQuantityChange("minus");
+      if (btn.className === "plus-btn") view.renderQuantityChange("plus");
+      if (btn.className === "add-to-cart-btn") {
+        const itemToAdd = view.getItemInfo();
+        const itemInCart = state.cart.find(
+          (ele) => ele.content === item.content
+        );
+        console.log("in?", itemInCart);
+        if (itemInCart) {
+          itemToAdd.quantity += itemInCart.quantity;
+          model
+            .updateCart(itemInCart.id, item)
+            .then(
+              (data) =>
+                (state.cart = state.cart
+                  .filter((el) => el.content !== data.content)
+                  .push(data))
+            );
+        } else
+          model
+            .addToCart(item)
+            .then((data) => (state.cart = [data, ...state.cart]));
+      }
+    });
+  };
 
-  const handleAddToCart = () => {};
+  const handleAddToCart = () => {
+    // view.inventoryItemEl?.addEventListener("click", (e) => {
+    //   console.log(e);
+    // });
+  };
 
   const handleDelete = () => {};
 
   const handleCheckout = () => {};
-  const bootstrap = () => {};
+  const bootstrap = () => {
+    init();
+    handleUpdateAmount(),
+      handleAddToCart(),
+      state.subscribe(() => {
+        view.renderInventory(state.inventory);
+      });
+  };
   return {
     bootstrap,
   };
