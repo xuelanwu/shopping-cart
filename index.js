@@ -1,4 +1,4 @@
-const { start } = require("live-server");
+// const { start } = require("live-server");
 
 const API = (() => {
   const URL = "http://localhost:3000";
@@ -166,7 +166,7 @@ const View = (() => {
       <p class="cart-item-quantity">${item.quantity}</p>
       <button class="delete-btn">delete</button>
       </li>`;
-      CartTemplateTemplate += itemTemplate;
+      CartTemplate += itemTemplate;
       cartListEl.innerHTML = CartTemplate;
     });
   };
@@ -194,27 +194,27 @@ const Controller = ((model, view) => {
   const handleUpdateAmount = () => {
     view.inventoryListEl.addEventListener("click", (e) => {
       const btn = e.target;
+      console.log(btn);
       if (btn.className === "minus-btn") view.renderQuantityChange("minus");
       if (btn.className === "plus-btn") view.renderQuantityChange("plus");
       if (btn.className === "add-to-cart-btn") {
         const itemToAdd = view.getItemInfo();
         const itemInCart = state.cart.find(
-          (ele) => ele.content === item.content
+          (ele) => ele.content === itemToAdd.content
         );
-        console.log("in?", itemInCart);
         if (itemInCart) {
-          itemToAdd.quantity += itemInCart.quantity;
-          model
-            .updateCart(itemInCart.id, item)
-            .then(
-              (data) =>
-                (state.cart = state.cart
-                  .filter((el) => el.content !== data.content)
-                  .push(data))
+          itemToAdd.quantity =
+            parseInt(itemToAdd.quantity) + parseInt(itemInCart.quantity);
+          model.updateCart(itemInCart.id, itemToAdd).then((data) => {
+            state.cart = state.cart.map((ele) =>
+              ele.content === data.content
+                ? { ...ele, quantity: data.quantity }
+                : ele
             );
+          });
         } else
           model
-            .addToCart(item)
+            .addToCart(itemToAdd)
             .then((data) => (state.cart = [data, ...state.cart]));
       }
     });
@@ -235,6 +235,7 @@ const Controller = ((model, view) => {
       handleAddToCart(),
       state.subscribe(() => {
         view.renderInventory(state.inventory);
+        view.renderCart(state.cart);
       });
   };
   return {

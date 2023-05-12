@@ -22,7 +22,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 1px solid red;
 }
 
 .inventory-list,
@@ -38,13 +37,22 @@
   gap: 0.5rem;
 }
 
-.inventory-list li {
+.inventory-list li,
+.cart-list li {
   display: flex;
-  justify-content: space-around;
   align-items: center;
   background: #e1dac8;
   border-radius: 2px;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.inventory-list li {
+  justify-content: space-around;
+}
+
+.cart-list li {
+  justify-content: center;
+  gap: 1rem;
 }
 
 .minus-btn,
