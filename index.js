@@ -65,6 +65,7 @@ const Model = (() => {
     #onChange;
     #inventory;
     #cart;
+
     constructor() {
       this.#inventory = [];
       this.#cart = [];
@@ -118,8 +119,9 @@ const View = (() => {
 
   const renderInventory = (inventory) => {
     let inventoryTemplate = "";
-    inventory.forEach((item) => {
-      const itemTemplate = `
+    if (inventory.length > 0) {
+      inventory.forEach((item) => {
+        const itemTemplate = `
       <li class="inventory-item" id="inventory-${item.id}">
       <p class="inventory-item-content">${item.content}</p>
       <button class="minus-btn">-</button>
@@ -127,8 +129,9 @@ const View = (() => {
       <button class="plus-btn">+</button>
       <button class="add-to-cart-btn">add to cart</button>
       </li>`;
-      inventoryTemplate += itemTemplate;
-    });
+        inventoryTemplate += itemTemplate;
+      });
+    }
     inventoryListEl.innerHTML = inventoryTemplate;
   };
 
@@ -140,7 +143,9 @@ const View = (() => {
     if (action === "minus") {
       if (inventoryQuantityEl.innerText > 0) inventoryQuantityEl.innerText--;
     }
-    if (action === "plus") inventoryQuantityEl.innerText++;
+    if (action === "plus") {
+      inventoryQuantityEl.innerText++;
+    }
   };
 
   const getItemInfo = (id) => {
@@ -197,14 +202,36 @@ const Controller = ((model, view) => {
       state.inventory = res;
     });
   };
+
   const handleUpdateAmount = () => {
     view.inventoryListEl.addEventListener("click", (e) => {
       const btn = e.target;
       const li = btn.closest(".inventory-item");
-      if (btn.className === "minus-btn")
+
+      const itemId = li.id.split("-")[1];
+
+      if (btn.className === "minus-btn") {
         view.renderQuantityChange(li.id, "minus");
-      if (btn.className === "plus-btn")
+        state.inventory = state.inventory.map((ele) => {
+          if (+ele.id === +itemId) {
+            if (ele.quantity > 0) {
+              const updatedQuantity = ele.quantity - 1;
+              return { ...ele, quantity: updatedQuantity };
+            } else return ele;
+          } else return ele;
+        });
+      }
+
+      if (btn.className === "plus-btn") {
         view.renderQuantityChange(li.id, "plus");
+        state.inventory = state.inventory.map((ele) => {
+          if (+ele.id === +itemId) {
+            const updatedQuantity = ele.quantity + 1;
+            return { ...ele, quantity: updatedQuantity };
+          } else return ele;
+        });
+      }
+
       if (btn.className === "add-to-cart-btn") {
         const itemToAdd = view.getItemInfo(li.id);
         const itemInCart = state.cart.find(
