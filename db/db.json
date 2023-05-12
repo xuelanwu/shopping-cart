@@ -2,12 +2,12 @@
   "cart": [
     {
       "content": "apple",
-      "quantity": 12,
+      "quantity": 16,
       "id": 1
     },
     {
       "content": "peach",
-      "quantity": 9,
+      "quantity": 12,
       "id": 2
     }
   ],

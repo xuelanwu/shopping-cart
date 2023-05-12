@@ -148,21 +148,21 @@ const View = (() => {
     }
   };
 
-  const getItemInfo = (id) => {
-    const inventoryItemEl = document.querySelector(`#${id}`);
-    const itemContentEl = inventoryItemEl.querySelector(
-      ".inventory-item-content"
-    );
-    const itemQuantityEl = inventoryItemEl.querySelector(
-      ".inventory-item-quantity"
-    );
-    const itemToAdd = {
-      content: itemContentEl.innerText,
-      quantity: itemQuantityEl.innerText,
-      // id: inventoryItemEl.id,
-    };
-    return itemToAdd;
-  };
+  // const getItemInfo = (id) => {
+  //   const inventoryItemEl = document.querySelector(`#${id}`);
+  //   const itemContentEl = inventoryItemEl.querySelector(
+  //     ".inventory-item-content"
+  //   );
+  //   const itemQuantityEl = inventoryItemEl.querySelector(
+  //     ".inventory-item-quantity"
+  //   );
+  //   const itemToAdd = {
+  //     content: itemContentEl.innerText,
+  //     quantity: itemQuantityEl.innerText,
+  //     // id: inventoryItemEl.id,
+  //   };
+  //   return itemToAdd;
+  // };
 
   const renderCart = (cart) => {
     let cartTemplate = "";
@@ -187,7 +187,7 @@ const View = (() => {
     renderInventory,
     renderCart,
     renderQuantityChange,
-    getItemInfo,
+    // getItemInfo,
   };
 })();
 
@@ -207,7 +207,6 @@ const Controller = ((model, view) => {
     view.inventoryListEl.addEventListener("click", (e) => {
       const btn = e.target;
       const li = btn.closest(".inventory-item");
-
       const itemId = li.id.split("-")[1];
 
       if (btn.className === "minus-btn") {
@@ -233,14 +232,19 @@ const Controller = ((model, view) => {
       }
 
       if (btn.className === "add-to-cart-btn") {
-        const itemToAdd = view.getItemInfo(li.id);
-        const itemInCart = state.cart.find(
-          (ele) => ele.content === itemToAdd.content
+        // const itemToAdd = view.getItemInfo(li.id);
+        const itemInInventory = state.inventory.find(
+          (ele) => +ele.id === +itemId
         );
+
+        const itemInCart = state.cart.find(
+          (ele) => ele.content === itemInInventory.content
+        );
+
         if (itemInCart) {
-          itemToAdd.quantity =
-            parseInt(itemToAdd.quantity) + parseInt(itemInCart.quantity);
-          model.updateCart(itemInCart.id, itemToAdd).then((data) => {
+          quantity =
+            parseInt(itemInInventory.quantity) + parseInt(itemInCart.quantity);
+          model.updateCart(itemId, { ...itemInCart, quantity }).then((data) => {
             state.cart = state.cart.map((ele) =>
               ele.content === data.content
                 ? { ...ele, quantity: data.quantity }
