@@ -135,35 +135,6 @@ const View = (() => {
     inventoryListEl.innerHTML = inventoryTemplate;
   };
 
-  const renderQuantityChange = (id, action) => {
-    const inventoryItemEl = document.querySelector(`#${id}`);
-    const inventoryQuantityEl = inventoryItemEl.querySelector(
-      ".inventory-item-quantity"
-    );
-    if (action === "minus") {
-      if (inventoryQuantityEl.innerText > 0) inventoryQuantityEl.innerText--;
-    }
-    if (action === "plus") {
-      inventoryQuantityEl.innerText++;
-    }
-  };
-
-  // const getItemInfo = (id) => {
-  //   const inventoryItemEl = document.querySelector(`#${id}`);
-  //   const itemContentEl = inventoryItemEl.querySelector(
-  //     ".inventory-item-content"
-  //   );
-  //   const itemQuantityEl = inventoryItemEl.querySelector(
-  //     ".inventory-item-quantity"
-  //   );
-  //   const itemToAdd = {
-  //     content: itemContentEl.innerText,
-  //     quantity: itemQuantityEl.innerText,
-  //     // id: inventoryItemEl.id,
-  //   };
-  //   return itemToAdd;
-  // };
-
   const renderCart = (cart) => {
     let cartTemplate = "";
     cart.forEach((item) => {
@@ -186,8 +157,6 @@ const View = (() => {
     cartWrapperEl,
     renderInventory,
     renderCart,
-    renderQuantityChange,
-    // getItemInfo,
   };
 })();
 
@@ -210,7 +179,6 @@ const Controller = ((model, view) => {
       const itemId = li.id.split("-")[1];
 
       if (btn.className === "minus-btn") {
-        view.renderQuantityChange(li.id, "minus");
         state.inventory = state.inventory.map((ele) => {
           if (+ele.id === +itemId) {
             if (ele.quantity > 0) {
@@ -222,7 +190,6 @@ const Controller = ((model, view) => {
       }
 
       if (btn.className === "plus-btn") {
-        view.renderQuantityChange(li.id, "plus");
         state.inventory = state.inventory.map((ele) => {
           if (+ele.id === +itemId) {
             const updatedQuantity = ele.quantity + 1;
@@ -258,10 +225,6 @@ const Controller = ((model, view) => {
       }
     });
   };
-
-  // const handleAddToCart = () => {
-
-  // };
 
   const handleDelete = () => {
     view.cartListEl.addEventListener("click", (e) => {
